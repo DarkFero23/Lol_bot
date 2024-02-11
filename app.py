@@ -2,6 +2,7 @@ import pyautogui
 import time
 
 def aceptar_boton():
+    # SE PUEDE AVANZAR MAS
 #Optimizar estas variables , para que se trabje con una sola, aunque la identificaicon de problemas seria mas dificil 
 #Proceso para entrenamiento
     locacion_boton_aceptar = None
