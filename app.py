@@ -5,6 +5,8 @@ def aceptar_boton():
     # SE PUEDE AVANZAR
 #Optimizar estas variables , para que se trabje con una sola, aunque la identificaicon de problemas seria mas dificil 
 #Proceso para entrenamiento
+
+#Inicializacion de variables
     locacion_boton_aceptar = None
     boton_comenzar = None
     buscador_pick = None
@@ -12,8 +14,7 @@ def aceptar_boton():
     sylas = None
     fijar = None
     yasuo = None
-    
-    
+#
     print("Comenzo")
     while locacion_boton_aceptar is None:
         locacion_boton_aceptar = pyautogui.locateOnScreen('aceptar.png', confidence=0.7)
@@ -23,6 +24,7 @@ def aceptar_boton():
     pyautogui.click(click)
     print("Siguiente paso")  
     time.sleep(1)
+    
     print("Buscador de pick ")  
     while buscador_pick is None:
         buscador_pick = pyautogui.locateOnScreen('buscador.png', confidence=0.9)
@@ -31,12 +33,9 @@ def aceptar_boton():
     click = pyautogui.center(buscador_pick)
     pyautogui.click(click)
     pyautogui.write('sylas', interval=0.15)
-    
-
-    #print("Exito")
     time.sleep(1)
     print("Exito")   
-    
+    ################################################################
     print("Seleccionar Campeon")  
     while sylas is None:
         sylas = pyautogui.locateOnScreen('sylas.png', confidence=0.9)
@@ -45,7 +44,7 @@ def aceptar_boton():
     click = pyautogui.center(sylas)
     pyautogui.click(click)
     time.sleep(1)
-         
+    ################################################################
     print("Empieza la fijacion")  
     while fijar is None:
         fijar = pyautogui.locateOnScreen('fijar.png', confidence=0.9)
