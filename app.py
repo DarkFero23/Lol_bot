@@ -2,7 +2,7 @@ import pyautogui
 import time
 
 def aceptar_boton():
-    # SE PUEDE AVANZAR MAS
+    # SE PUEDE AVANZAR
 #Optimizar estas variables , para que se trabje con una sola, aunque la identificaicon de problemas seria mas dificil 
 #Proceso para entrenamiento
     locacion_boton_aceptar = None
@@ -15,11 +15,11 @@ def aceptar_boton():
     
     
     print("Comenzo")
-    while boton_comenzar is None:
-        boton_comenzar = pyautogui.locateOnScreen('Comenzar.png', confidence=0.7)
+    while locacion_boton_aceptar is None:
+        locacion_boton_aceptar = pyautogui.locateOnScreen('aceptar.png', confidence=0.7)
         time.sleep(1)
     print("Econtro el boton comenzar")
-    click = pyautogui.center(boton_comenzar)
+    click = pyautogui.center(locacion_boton_aceptar)
     pyautogui.click(click)
     print("Siguiente paso")  
     time.sleep(1)
