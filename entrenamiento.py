@@ -2,10 +2,8 @@ import pyautogui
 import time
 
 def aceptar_boton():
-    # SE PUEDE AVANZAR
 #Optimizar estas variables , para que se trabje con una sola, aunque la identificaicon de problemas seria mas dificil 
 #Proceso para entrenamiento
-
 #Inicializacion de variables
     locacion_boton_aceptar = None
     boton_comenzar = None
@@ -14,17 +12,23 @@ def aceptar_boton():
     sylas = None
     fijar = None
     yasuo = None
-#
-    print("Comenzo")
+
+    print("Comenzando el Script, esperando a comenzar partida la partida")
+    
+
     while locacion_boton_aceptar is None:
-        locacion_boton_aceptar = pyautogui.locateOnScreen('aceptar.png', confidence=0.7)
+        locacion_boton_aceptar = pyautogui.locateOnScreen('comenzar.png', confidence=0.7)
         time.sleep(1)
-    print("Econtro el boton comenzar")
+    print("Se encontro el boton, aceptando partida")
     click = pyautogui.center(locacion_boton_aceptar)
     pyautogui.click(click)
-    print("Siguiente paso")  
-    time.sleep(1)
     
+    print("Siguiente paso")  
+    time.sleep(10)
+    
+    if locacion_boton_aceptar is None == 0:  # True
+        print("z is even")
+        
     print("Buscador de pick ")  
     while buscador_pick is None:
         buscador_pick = pyautogui.locateOnScreen('buscador.png', confidence=0.9)
@@ -53,5 +57,14 @@ def aceptar_boton():
     click = pyautogui.center(fijar)
     pyautogui.click(click)
     time.sleep(1)
-
+    """
+    print ("Salir partida")
+    while fijar is None:
+        fijar = pyautogui.locateOnScreen('salir.png', confidence=0.9)
+        time.sleep(1)
+    print("Fija ")     
+    click = pyautogui.center(fijar)
+    pyautogui.click(click)
+    time.sleep(1)
+    """
 aceptar_boton()
