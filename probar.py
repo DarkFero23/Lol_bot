@@ -3,7 +3,7 @@ import time
 
 while True:
     try:
-        if pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Personajes_pick/image.png', confidence=0.7) is not None:
+        if pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png', confidence=0.7) is not None:
             print("Se ve")
         else:
             print("No se ve")
