@@ -1,7 +1,7 @@
 from PIL import Image
 
 # Cargar la imagen
-imagen = Image.open('D:/Chente/Lolblot/Lol_bot/Launcher/aceptar.png')
+imagen = Image.open('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/aceptar_redimensionada.png')
 
 # Obtener las dimensiones
 ancho, alto = imagen.size

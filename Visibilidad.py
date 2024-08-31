@@ -3,7 +3,7 @@ import time
 
 def mostrar_imagen_detectada():
     print("Buscando imagen en la pantalla...")
-    imagen = pyautogui.locateOnScreen('D:/Chente/Lolblot/Lol_bot/Launcher/aceptar_redimensionada.png', confidence=0.2)
+    imagen = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscar.png', confidence=0.6)
     if imagen:
         print(f"Imagen detectada en: {imagen}")
     else:

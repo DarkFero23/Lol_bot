@@ -19,7 +19,7 @@ def aceptar_boton():
 
     # Esperar hasta que se encuentre el botón 'Aceptar'
     while locacion_boton_aceptar is None:
-        locacion_boton_aceptar = pyautogui.locateOnScreen('D:/Chente/Lolblot/Lol_bot/Launcher/Aceptar.jpg', confidence=0.7)
+        locacion_boton_aceptar = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/Aceptar.jpg', confidence=0.7)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
     print("Se encontró el botón 'Aceptando la partida'")
     click = pyautogui.center(locacion_boton_aceptar)
@@ -31,7 +31,7 @@ def aceptar_boton():
     print("Buscando pick: Sylas")
     global buscador_pick
     while buscador_pick is None:
-        buscador_pick = pyautogui.locateOnScreen('D:/Chente/Lolblot/Lol_bot/Launcher/buscador.png', confidence=0.9)
+        buscador_pick = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png', confidence=0.9)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
 
     print("Pickeando Sylas")
@@ -44,7 +44,7 @@ def aceptar_boton():
     print("Buscando pick para banear: Yasuo")
     global buscador_ban
     while buscador_ban is None:
-        buscador_ban = pyautogui.locateOnScreen('/Lol_bot/Launcher/buscador.png', confidence=0.9)
+        buscador_ban = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png', confidence=0.9)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
     print("Baneando Yasuo")
     click = pyautogui.center(buscador_ban)
@@ -56,7 +56,7 @@ def aceptar_boton():
     print("Buscando pick: Sylas")
     buscador_pick = None  # Resetear la variable para evitar conflictos
     while buscador_pick is None:
-        buscador_pick = pyautogui.locateOnScreen('/Lol_bot/Launcher/buscador.png', confidence=0.9)
+        buscador_pick = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png', confidence=0.9)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
     print("Pickeando Sylas nuevamente")
     click = pyautogui.center(buscador_pick)
@@ -68,7 +68,7 @@ def aceptar_boton():
     print("Seleccionando Campeón para la partida")
     global personaje_pick
     while personaje_pick is None:
-        personaje_pick = pyautogui.locateOnScreen('/Lol_bot/Personajes_pick/sylas.png', confidence=0.9)
+        personaje_pick = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/sylas.png', confidence=0.9)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
     print("Seleccionando Sylas")
     click = pyautogui.center(personaje_pick)
@@ -78,7 +78,7 @@ def aceptar_boton():
     print("Iniciando la fijación del campeón")
     global fijar
     while fijar is None:
-        fijar = pyautogui.locateOnScreen('/Lol_bot/Launcher/fijar.png', confidence=0.9)
+        fijar = pyautogui.locateOnScreen('C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/fijar.png', confidence=0.9)
         time.sleep(1)  # Espera de 1 segundo para evitar sobrecargar el CPU
     print("Fijando el Campeón")
     click = pyautogui.center(fijar)

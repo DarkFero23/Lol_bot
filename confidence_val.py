@@ -1,7 +1,7 @@
 import pyautogui
 import time
 
-ruta_imagen = 'D:/Chente/Lolblot/Lol_bot/Launcher/aceptar_redimensionada.png'
+ruta_imagen = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscars.png'
 
 for conf in [0.3,0.4, 0.5, 0.6, 0.7, 0.8]:
     try:
