@@ -1,6 +1,9 @@
 import pyautogui
 import time
 import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 
 # Función que espera hasta que el botón 'Aceptar' aparezca en la pantalla y hace clic en él.
 def esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=0.7, tiempo_espera=500):
@@ -90,7 +93,7 @@ def fijar_seleccion(ruta_fijar_boton):
     return True
 
 # Función principal que ejecuta todo el proceso de selección y baneo de campeones.
-def ejecutar_seleccion(campeon_pick, campeon_ban):
+def ejecutar_seleccion(campeon_pick=None, campeon_ban=None):
     ruta_buscador = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png'
     ruta_fijar_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/fijar.png'
     ruta_bloquear_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/bloqueo.png'
@@ -134,9 +137,71 @@ def ejecutar_seleccion(campeon_pick, campeon_ban):
     print("Proceso de selección completado exitosamente.")
 
 # Ejemplo de uso
-if __name__ == "__main__":
-    campeon_a_pickear = "sylas"
-    campeon_a_banear = "leblanc"
-    #campeon_a_pickear = input("Ingresa el nombre del campeón que deseas pickear: ").strip().lower()
-    #campeon_a_banear = input("Ingresa el nombre del campeón que deseas banear: ").strip().lower()
-    ejecutar_seleccion(campeon_a_pickear, campeon_a_banear)
+
+app = Flask(__name__)
+CORS(app)  # Habilita CORS para todas las rutas
+
+app.config['CARPETA_CAMPEONES'] = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Personajes_pick'
+
+# Tu script de automatización aquí
+# (Incluye las funciones esperar_y_aceptar_partida, seleccionar_campeon, etc.)
+
+@app.route('/pick', methods=['GET'])
+
+def pick_champion():
+    campeon_pick = request.args.get('campeon')
+    if campeon_pick:
+        print(f"Recibido para pick: {campeon_pick}")  # Mensaje que confirma la recepción de datos
+        ejecutar_seleccion(campeon_pick, None)  # Ejecuta la función para pickear el campeón
+        return jsonify({"status": "success", "campeon": campeon_pick})
+    else:
+        return jsonify({"status": "error", "message": "No se recibió ningún campeón para pickear."}), 400
+
+@app.route('/ban', methods=['GET'])
+def ban_champion():
+    campeon_ban = request.args.get('campeon')
+    if campeon_ban:
+        print(f"Recibido para ban: {campeon_ban}")  # Mensaje que confirma la recepción de datos
+        ejecutar_seleccion(None, campeon_ban)  # Ejecuta la función para banear el campeón
+        return jsonify({"status": "success", "campeon": campeon_ban})
+    else:
+        return jsonify({"status": "error", "message": "No se recibió ningún campeón para banear."}), 400
+
+@app.route('/seleccion', methods=['GET'])
+def seleccionar_y_banear():
+    campeon_pick = request.args.get('campeon_pick')
+    campeon_ban = request.args.get('campeon_ban')
+
+    if campeon_pick and campeon_ban:
+        print(f"Recibido para pick: {campeon_pick}, Recibido para ban: {campeon_ban}")
+        ejecutar_seleccion(campeon_pick, campeon_ban)  # Ejecuta la función para pickear y banear los campeones
+        return jsonify({"status": "success"})
+    else:
+        return jsonify({"status": "error", "message": "No se recibieron ambos campeones."}), 400
+    
+@app.route('/obtener_campeones', methods=['GET'])
+def obtener_campeones():
+    campeones = []
+    for archivo in os.listdir(app.config['CARPETA_CAMPEONES']):
+        if archivo.endswith('.png'):  # Filtra solo archivos de imagen PNG
+            nombre = archivo.replace('.png', '')  # Remueve la extensión de los nombres de archivo
+            imagen = f'http://192.168.18.20:5500/Personajes_pick/{archivo}'
+            campeones.append({'name': nombre, 'image': imagen})
+    return jsonify(campeones)
+
+@app.route('/seleccion', methods=['GET'])
+def seleccion_campeones():
+    campeon_pick = request.args.get('campeon_pick')
+    campeon_ban = request.args.get('campeon_ban')
+    
+    if campeon_pick and campeon_ban:
+        print(f"Recibido para pick: {campeon_pick}, y para ban: {campeon_ban}")
+        ejecutar_seleccion(campeon_pick, campeon_ban)  # Asegúrate de que esta función exista y funcione correctamente
+        return jsonify({"status": "success", "campeon_pick": campeon_pick, "campeon_ban": campeon_ban})
+    else:
+        return jsonify({"status": "error", "message": "Faltan parámetros para pick o ban."}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
