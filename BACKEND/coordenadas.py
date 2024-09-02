@@ -29,6 +29,6 @@ def click_en_coordenadas_imagen(ruta_imagen, coordenadas):
 
 # Ejemplo de uso
 if __name__ == "__main__":
-    ruta_imagen = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png'
+    ruta_imagen = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot//Launcher/buscador.png'
     coordenadas = (50, 30)  # Coordenadas relativas dentro de la imagen
     click_en_coordenadas_imagen(ruta_imagen, coordenadas)
