@@ -94,20 +94,20 @@ def fijar_seleccion(ruta_fijar_boton):
 
 # Función principal que ejecuta todo el proceso de selección y baneo de campeones.
 def ejecutar_seleccion(campeon_pick=None, campeon_ban=None):
-    ruta_buscador = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/buscador.png'
-    ruta_fijar_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/fijar.png'
-    ruta_bloquear_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/bloqueo.png'
-    ruta_boton_aceptar = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Launcher/aceptar_s.png'
-    ruta_campeon_pick = f'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Personajes_pick/{campeon_pick}.png'
-    ruta_campeon_ban = f'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Personajes_pick/{campeon_ban}.png'
-
+    ruta_buscador = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/buscador.png'
+    ruta_fijar_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Launcher/fijar.png'
+    ruta_bloquear_boton = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Launcher/bloqueo.png'
+    ruta_boton_aceptar = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Launcher/aceptar_s.png'
+    ruta_campeon_pick = f'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Personajes_pick/{campeon_pick}.png'
+    ruta_campeon_ban = f'C/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Personajes_pick/{campeon_ban}.png'
+    
     print("Iniciando proceso de selección de campeón...")
-    '''
+    
     # Esperar y aceptar la partida
     if not esperar_y_aceptar_partida(ruta_boton_aceptar):
         print("Proceso abortado: No se pudo aceptar la partida.")
         return
-'''
+
     # Seleccionar campeón para pick
     if not seleccionar_campeon(campeon_pick, ruta_buscador, ruta_campeon_pick):
         print("Proceso abortado durante la selección del campeón para pick.")
@@ -141,7 +141,7 @@ def ejecutar_seleccion(campeon_pick=None, campeon_ban=None):
 app = Flask(__name__)
 CORS(app)  # Habilita CORS para todas las rutas
 
-app.config['CARPETA_CAMPEONES'] = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/Personajes_pick'
+app.config['CARPETA_CAMPEONES'] = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot/BACKEND/Personajes_pick'
 
 # Tu script de automatización aquí
 # (Incluye las funciones esperar_y_aceptar_partida, seleccionar_campeon, etc.)
@@ -185,7 +185,7 @@ def obtener_campeones():
     for archivo in os.listdir(app.config['CARPETA_CAMPEONES']):
         if archivo.endswith('.png'):  # Filtra solo archivos de imagen PNG
             nombre = archivo.replace('.png', '')  # Remueve la extensión de los nombres de archivo
-            imagen = f'http://192.168.18.20:5500/Personajes_pick/{archivo}'
+            imagen = f'http://192.168.18.20:5500/BACKEND/Personajes_pick/{archivo}'
             campeones.append({'name': nombre, 'image': imagen})
     return jsonify(campeones)
 
