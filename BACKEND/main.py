@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-from aceptar import ejecutar_seleccion, esperar_imagen , esperar_y_aceptar_partida , seleccionar_campeon_ban ,seleccionar_campeon_pick, limpiar_buscador , pre_pick_campeon,hacer_click_boton
+from .aceptar import ejecutar_seleccion, esperar_imagen , esperar_y_aceptar_partida , seleccionar_campeon_ban ,seleccionar_campeon_pick, limpiar_buscador , pre_pick_campeon,hacer_click_boton
 
 app = Flask(__name__)
 CORS(app)  # Habilitar CORS para permitir solicitudes desde el frontend
