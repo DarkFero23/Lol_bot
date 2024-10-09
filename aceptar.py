@@ -1,208 +1,304 @@
 import pyautogui
 import time
 import os
-from flask import Flask, request, jsonify
+import cv2
+import numpy as np
+
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
-
 # Función que espera hasta que el botón 'Aceptar' aparezca en la pantalla y hace clic en él.
-def esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=0.7, tiempo_espera=500):
-    locacion_boton_aceptar = None
+def esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=0.85, tiempo_espera=500):
     tiempo_inicial = time.time()
-    while locacion_boton_aceptar is None and time.time() - tiempo_inicial < tiempo_espera:
-        locacion_boton_aceptar = pyautogui.locateOnScreen(ruta_boton_aceptar, confidence=confianza)
+    while time.time() - tiempo_inicial < tiempo_espera:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        boton_aceptar = cv2.imread(ruta_boton_aceptar)
+        result = cv2.matchTemplate(screenshot, boton_aceptar, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= confianza)
+
+        if loc[0].size > 0:
+            print("Se encontró el botón 'Aceptar'.")
+            for pt in zip(*loc[::-1]):  # Cambiar columnas y filas
+                cv2.rectangle(screenshot, pt, (pt[0] + boton_aceptar.shape[1], pt[1] + boton_aceptar.shape[0]), (0, 255, 0), 2)
+                click = pyautogui.center((pt[0], pt[1], boton_aceptar.shape[1], boton_aceptar.shape[0]))
+                pyautogui.click(click)
+                print("Botón 'Aceptar' clickeado. Esperando a entrar a la partida...")
+                return True
         time.sleep(1)
     
-    if locacion_boton_aceptar is not None:
-        print("Se encontró el botón 'Aceptar'.")
-        click = pyautogui.center(locacion_boton_aceptar)
-        pyautogui.click(click)
-        print("Botón 'Aceptar' clickeado. Esperando a entrar a la partida...")
-        return True
-    else:
-        print("Error: No se encontró el botón 'Aceptar' dentro del tiempo especificado.")
-        return False
+    print("Error: No se encontró el botón 'Aceptar' dentro del tiempo especificado.")
+    return False
+def esperar_imagen(ruta_imagen_media, timeout=30):
+    """
+    Espera hasta que una imagen específica aparezca en la pantalla dentro de un tiempo determinado.
+    
+    :param ruta_imagen_media: Ruta de la imagen que se espera.
+    :param timeout: Tiempo máximo de espera en segundos (por defecto 30 segundos).
+    :return: True si la imagen apareció, False si no apareció en el tiempo establecido.
+    """
+    print(f"Esperando la aparición de la imagen: {ruta_imagen_media}")
+    tiempo_inicial = time.time()
 
+    while time.time() - tiempo_inicial < timeout:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        imagen_referencia = cv2.imread(ruta_imagen_media)
+        result = cv2.matchTemplate(screenshot, imagen_referencia, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
+
+        if loc[0].size > 0:
+            print(f"Imagen encontrada: {ruta_imagen_media}")
+            return True
+
+        time.sleep(1) 
+
+    print(f"Error: No se encontró la imagen {ruta_imagen_media} en {timeout} segundos.")
+    return False
 # Función para limpiar el texto en el buscador.
 def limpiar_buscador(ruta_buscador):
-    """
-    Hace clic en el buscador y luego limpia el texto que está dentro.
-    """
-    buscador_pick = None
-    while buscador_pick is None:
-        buscador_pick = pyautogui.locateOnScreen(ruta_buscador, confidence=0.7)
-        time.sleep(1)
-    
-    click = pyautogui.center(buscador_pick)
-    pyautogui.click(click)
-    pyautogui.hotkey('ctrl', 'a')  # Selecciona todo el texto
-    pyautogui.press('backspace')   # Elimina el texto seleccionado
-    
-# Función que selecciona un campeón.
+    """Hace clic en el buscador y luego limpia el texto que está dentro."""
+    while True:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        buscador_pick = cv2.imread(ruta_buscador)
+        result = cv2.matchTemplate(screenshot, buscador_pick, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
 
-def seleccionar_campeon(campeon, ruta_buscador, ruta_campeon):
+        if loc[0].size > 0:
+            for pt in zip(*loc[::-1]):  
+                click = pyautogui.center((pt[0], pt[1], buscador_pick.shape[1], buscador_pick.shape[0]))
+                pyautogui.click(click)
+                pyautogui.hotkey('ctrl', 'a')  
+                pyautogui.press('backspace')   
+                return
+
+def pre_pick_campeon(campeon, ruta_buscador, ruta_campeon):
     print(f"Buscando el campeón: {campeon}")
-    
-    buscador_pick = None
-    while buscador_pick is None:
-        buscador_pick = pyautogui.locateOnScreen(ruta_buscador, confidence=0.7)
-        time.sleep(1)
-    
-    click = pyautogui.center(buscador_pick)
-    pyautogui.click(click)
-    pyautogui.write(campeon, interval=0.15)
-    time.sleep(1)  # Tiempo para que aparezca la imagen del campeón
 
-    if os.path.exists(ruta_campeon):
-        campeon_imagen = pyautogui.locateOnScreen(ruta_campeon, confidence=0.7)
-        if campeon_imagen is not None:
-            click = pyautogui.center(campeon_imagen)
-            pyautogui.click(click)
-            print(f"{campeon} seleccionado.")
-            limpiar_buscador(ruta_buscador)  # Limpia el buscador después de seleccionar el campeón
-            return True
-        else:
-            print(f"Error: No se encontró la imagen del campeón {campeon} en la pantalla.")
-            return False
-    else:
-        print(f"Error: La imagen del campeón {campeon} no existe en la ruta especificada.")
-        return False
+    while True:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        buscador_pick = cv2.imread(ruta_buscador)
+        result = cv2.matchTemplate(screenshot, buscador_pick, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
 
-# Función para bloquear un campeón (ban).
-def bloquear_campeon(ruta_bloquear_boton):
-    bloquear_button = None
-    while bloquear_button is None:
-        bloquear_button = pyautogui.locateOnScreen(ruta_bloquear_boton, confidence=0.7)
-        time.sleep(1)
-    
-    click = pyautogui.center(bloquear_button)
-    pyautogui.click(click)
-    print("Campeón baneado.")
-    return True
+        if loc[0].size > 0:
+            for pt in zip(*loc[::-1]):  
+                click = pyautogui.center((pt[0], pt[1], buscador_pick.shape[1], buscador_pick.shape[0]))
+                pyautogui.click(click)
+                pyautogui.write(campeon, interval=0.15)
+                time.sleep(1)  
+                campeon_imagen = cv2.imread(ruta_campeon)
+                tiempo_inicial = time.time()
+                while time.time() - tiempo_inicial < 60:  
+                    screenshot = pyautogui.screenshot()
+                    screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+                    result = cv2.matchTemplate(screenshot, campeon_imagen, cv2.TM_CCOEFF_NORMED)
+                    loc = np.where(result >= 0.85)
+                    if loc[0].size > 0:
+                        for pt in zip(*loc[::-1]):  
+                            click = pyautogui.center((pt[0], pt[1], campeon_imagen.shape[1], campeon_imagen.shape[0]))
+                            pyautogui.click(click)
+                            print(f"{campeon} seleccionado. Siguiendo con lo demas")
+                            limpiar_buscador(ruta_buscador)  
 
-# Función para fijar la selección del campeón.
-def fijar_seleccion(ruta_fijar_boton):
-    fijar = None
-    while fijar is None:
-        fijar = pyautogui.locateOnScreen(ruta_fijar_boton, confidence=0.7)
-        time.sleep(1)
+                            return True
+
+                print(f"Error: No se encontró la imagen del campeón {campeon} en la pantalla.")
+                return False
+
+def seleccionar_campeon_ban(campeon, ruta_buscador, ruta_campeon, ruta_boton):
+    print(f"Buscando el campeón: {campeon}")
+
+    while True:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        buscador_pick = cv2.imread(ruta_buscador)
+        result = cv2.matchTemplate(screenshot, buscador_pick, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
+
+        if loc[0].size > 0:
+            for pt in zip(*loc[::-1]):  
+                click = pyautogui.center((pt[0], pt[1], buscador_pick.shape[1], buscador_pick.shape[0]))
+                pyautogui.click(click)
+                pyautogui.write(campeon, interval=0.15)
+                time.sleep(1)  
+                campeon_imagen = cv2.imread(ruta_campeon)
+                tiempo_inicial = time.time()
+                while time.time() - tiempo_inicial < 60:  
+                    screenshot = pyautogui.screenshot()
+                    screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+                    result = cv2.matchTemplate(screenshot, campeon_imagen, cv2.TM_CCOEFF_NORMED)
+                    loc = np.where(result >= 0.85)
+
+                    if loc[0].size > 0:
+                        for pt in zip(*loc[::-1]):  
+                            click = pyautogui.center((pt[0], pt[1], campeon_imagen.shape[1], campeon_imagen.shape[0]))
+                            pyautogui.click(click)
+                            print(f"{campeon} seleccionado.")
+                            if hacer_click_boton(ruta_boton):
+                                print("Clic en el botón exitoso.")
+                            else:
+                                print("Error: No se pudo hacer clic en el botón.")
+                            limpiar_buscador(ruta_buscador)  
+
+                            return True
+
+                print(f"Error: No se encontró la imagen del campeón {campeon} en la pantalla.")
+                return False
+            
+def seleccionar_campeon_pick(campeon, ruta_buscador, ruta_campeon, ruta_boton):
+    print(f"Buscando el campeón: {campeon}")
+
+    while True:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        buscador_pick = cv2.imread(ruta_buscador)
+        result = cv2.matchTemplate(screenshot, buscador_pick, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
+
+        if loc[0].size > 0:
+            for pt in zip(*loc[::-1]):  
+                click = pyautogui.center((pt[0], pt[1], buscador_pick.shape[1], buscador_pick.shape[0]))
+                pyautogui.click(click)
+                pyautogui.write(campeon, interval=0.15)
+                time.sleep(1)  
+                campeon_imagen = cv2.imread(ruta_campeon)
+                tiempo_inicial = time.time()
+                while time.time() - tiempo_inicial < 60:  
+                    screenshot = pyautogui.screenshot()
+                    screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+                    result = cv2.matchTemplate(screenshot, campeon_imagen, cv2.TM_CCOEFF_NORMED)
+                    loc = np.where(result >= 0.85)
+
+                    if loc[0].size > 0:
+                        for pt in zip(*loc[::-1]):  
+                            click = pyautogui.center((pt[0], pt[1], campeon_imagen.shape[1], campeon_imagen.shape[0]))
+                            pyautogui.click(click)
+                            print(f"{campeon} seleccionado.")
+                            if hacer_click_boton(ruta_boton):
+                                print("Clic en el botón exitoso.")
+                            else:
+                                print("Error: No se pudo hacer clic en el botón.")
+                            limpiar_buscador(ruta_buscador)  
+
+                            return True
+
+                print(f"Error: No se encontró la imagen del campeón {campeon} en la pantalla.")
+                return False
+            
+
+def hacer_click_boton(ruta_boton):
+    """
+    Función para buscar y hacer clic en un botón basado en la ruta de la imagen.
     
-    click = pyautogui.center(fijar)
-    pyautogui.click(click)
-    print("Campeón fijado.")
-    return True
+    :param ruta_boton: Ruta de la imagen del botón a hacer clic.
+    :return: True si el clic fue exitoso, False en caso contrario.
+    """
+    print("Buscando botón para hacer clic...")
+    
+    while True:
+        screenshot = pyautogui.screenshot()
+        screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+        boton = cv2.imread(ruta_boton)
+        result = cv2.matchTemplate(screenshot, boton, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= 0.85)
+
+        print(f"Buscando botón. Detecciones encontradas: {loc[0].size}")
+
+        if loc[0].size > 0:
+            for pt in zip(*loc[::-1]):
+                click = pyautogui.center((pt[0], pt[1], boton.shape[1], boton.shape[0]))
+                pyautogui.click(click)
+                print("Botón clickeado.")
+                return True
+
+        # Puedes poner un delay aquí si lo deseas
+        time.sleep(1)
+
+    print("Error: No se encontró el botón.")
+    return False
 
 # Función principal que ejecuta todo el proceso de selección y baneo de campeones.
 def ejecutar_seleccion(campeon_pick=None, campeon_ban=None):
-    ruta_buscador = 'C:/Users/Luis/Downloads/Lol_bot/Launcher/buscador.png'
-    ruta_fijar_boton = 'C:/Users/Luis/Downloads/Lol_bot/Launcher/fijar.png'
-    ruta_bloquear_boton = 'C:/Users/Luis/Downloads/Lol_bot/Launcher/bloqueo.png'
-    ruta_boton_aceptar = 'C:/Users/Luis/Downloads/Lol_bot/Launcher/aceptar_s.png'
-    ruta_campeon_pick = f'C:/Users/Luis/Downloads/Lol_bot/Personajes_pick/{campeon_pick}.png'
-    ruta_campeon_ban = f'C/Users/Luis/Downloads/Lol_bot/Personajes_pick/{campeon_ban}.png'
+    ruta_buscador = './Launcher/buscador1.0.png'
+    ruta_fijar_boton = './Launcher/fijar.png'
+    ruta_click_boton_bloqueo = './Launcher/bloqueo2.png'
+    ruta_boton_aceptar = './Launcher/aceptar.png'
+    ruta_campeon_pick = f'./Personajes_pick/{campeon_pick}.png'
+    ruta_campeon_ban = f'./Personajes_pick/{campeon_ban}.png'
+    ruta_imagen_media = './Launcher/BloqueoLetras.png'
+
+    if campeon_pick and not os.path.exists(ruta_campeon_pick):
+        print(f"Error: La imagen para el campeón {campeon_pick} no se encuentra en la ruta {ruta_campeon_pick}.")
+        return False
+    if campeon_ban and not os.path.exists(ruta_campeon_ban):
+        print(f"Error: La imagen para el campeón {campeon_ban} no se encuentra en la ruta {ruta_campeon_ban}.")
+        return False
     
     print("Iniciando proceso de selección de campeón...")
-    
-    # Esperar y aceptar la partida
+
+    #Esperar y aceptar la partida
     if not esperar_y_aceptar_partida(ruta_boton_aceptar):
         print("Proceso abortado: No se pudo aceptar la partida.")
         return
 
-    # Seleccionar campeón para pick
-    if not seleccionar_campeon(campeon_pick, ruta_buscador, ruta_campeon_pick):
+    #Este es el pre-pick antes del baneo , donde no aparece el boto nde FIJAR (todavia)
+    if campeon_pick and not pre_pick_campeon(campeon_pick, ruta_buscador, ruta_campeon_pick):
         print("Proceso abortado durante la selección del campeón para pick.")
         return
-    time.sleep(15)
-    # Seleccionar campeón para ban
-    if not seleccionar_campeon(campeon_ban, ruta_buscador, ruta_campeon_ban):
-        print("Proceso abortado durante la selección del campeón para ban.")
+    
+    # Esperar hasta que aparezca la imagen clave que indica que puedes proceder al ban
+    if not esperar_imagen(ruta_imagen_media, timeout=30):  
+        print("Error: No se pudo detectar la pantalla de bloqueo (ban).")
         return
     
-    # Bloquear campeón baneado
-    if not bloquear_campeon(ruta_bloquear_boton):
+     # Bloquear campeón (ban)
+    if campeon_ban and not seleccionar_campeon_ban(campeon_ban, ruta_buscador, ruta_campeon_ban, ruta_click_boton_bloqueo):
         print("Proceso abortado durante el bloqueo del campeón.")
         return
     
-    # Volver a seleccionar el campeón inicial antes de fijarlo
-
-    if not seleccionar_campeon(campeon_pick, ruta_buscador, ruta_campeon_pick):
+    # Seleccionar campeón para pick
+    if campeon_pick and not seleccionar_campeon_pick(campeon_pick, ruta_buscador, ruta_campeon_pick,ruta_fijar_boton):
         print("Proceso abortado durante la selección del campeón para pick.")
         return
-    
-    # Fijar selección del campeón pickeado
-    if not fijar_seleccion(ruta_fijar_boton):
-        print("Proceso abortado durante la fijación de la selección.")
-        return
-    
-    print("Proceso de selección completado exitosamente.")
 
-# Ejemplo de uso
+    print("El proceso de selección de campeones ha finalizado con éxito.")
 
-app = Flask(__name__)   
-CORS(app)  # Habilita CORS para todas las rutas
+app = Flask(__name__)
+CORS(app)  # Habilitar CORS para permitir solicitudes desde el frontend
 
-app.config['CARPETA_CAMPEONES'] = 'C:/Users/Luis/Downloads/Lol_bot/Personajes_pick'
-
-# Tu script de automatización aquí
-# (Incluye las funciones esperar_y_aceptar_partida, seleccionar_campeon, etc.)
-
-@app.route('/pick', methods=['GET'])
-
-def pick_champion():
-    campeon_pick = request.args.get('campeon')
-    if campeon_pick:
-        print(f"Recibido para pick: {campeon_pick}")  # Mensaje que confirma la recepción de datos
-        ejecutar_seleccion(campeon_pick, None)  # Ejecuta la función para pickear el campeón
-        return jsonify({"status": "success", "campeon": campeon_pick})
-    else:
-        return jsonify({"status": "error", "message": "No se recibió ningún campeón para pickear."}), 400
-
-@app.route('/ban', methods=['GET'])
-def ban_champion():
-    campeon_ban = request.args.get('campeon')
-    if campeon_ban:
-        print(f"Recibido para ban: {campeon_ban}")  # Mensaje que confirma la recepción de datos
-        ejecutar_seleccion(None, campeon_ban)  # Ejecuta la función para banear el campeón
-        return jsonify({"status": "success", "campeon": campeon_ban})
-    else:
-        return jsonify({"status": "error", "message": "No se recibió ningún campeón para banear."}), 400
-
-@app.route('/seleccion', methods=['GET'])
-def seleccionar_y_banear():
-    campeon_pick = request.args.get('campeon_pick')
-    campeon_ban = request.args.get('campeon_ban')
-
-    if campeon_pick and campeon_ban:
-        print(f"Recibido para pick: {campeon_pick}, Recibido para ban: {campeon_ban}")
-        ejecutar_seleccion(campeon_pick, campeon_ban)  # Ejecuta la función para pickear y banear los campeones
-        return jsonify({"status": "success"})
-    else:
-        return jsonify({"status": "error", "message": "No se recibieron ambos campeones."}), 400
-    
-@app.route('/obtener_campeones', methods=['GET'])
+@app.route('/campeones', methods=['GET'])
 def obtener_campeones():
+    # Ruta de la carpeta donde están las imágenes de los campeones
+    carpeta_campeones = './Personajes_pick'
     campeones = []
-    for archivo in os.listdir(app.config['CARPETA_CAMPEONES']):
-        if archivo.endswith('.png'):  # Filtra solo archivos de imagen PNG
-            nombre = archivo.replace('.png', '')  # Remueve la extensión de los nombres de archivo
-            imagen = f'http://192.168.18.20:5500/Personajes_pick/{archivo}'
-            campeones.append({'name': nombre, 'image': imagen})
+
+    # Obtener los nombres de los archivos de la carpeta
+    for filename in os.listdir(carpeta_campeones):
+        if filename.endswith('.png'):  # Verifica que sea una imagen
+            campeon = filename[:-4]  # Eliminar la extensión .png
+            campeones.append(campeon)
+
     return jsonify(campeones)
 
-@app.route('/seleccion', methods=['GET'])
-def seleccion_campeones():
-    campeon_pick = request.args.get('campeon_pick')
-    campeon_ban = request.args.get('campeon_ban')
+
+@app.route('/ejecutar_seleccion', methods=['POST'])
+def ejecutar_seleccion_api():
+    data = request.json
+    campeon_pick = data['campeon_pick']
+    campeon_ban = data['campeon_ban']
+    print("El camepon para pickear es"+ campeon_pick)
+    print("El camepon para banear es" + campeon_ban)
+    # Llama a la función que ejecuta la lógica de selección
+    resultado = ejecutar_seleccion(campeon_pick, campeon_ban)
     
-    if campeon_pick and campeon_ban:
-        print(f"Recibido para pick: {campeon_pick}, y para ban: {campeon_ban}")
-        ejecutar_seleccion(campeon_pick, campeon_ban)  # Asegúrate de que esta función exista y funcione correctamente
-        return jsonify({"status": "success", "campeon_pick": campeon_pick, "campeon_ban": campeon_ban})
-    else:
-        return jsonify({"status": "error", "message": "Faltan parámetros para pick o ban."}), 400
+    if resultado is False:
+        return jsonify(message="Error al ejecutar la selección."), 500
+    
+    return jsonify(message=f"Seleccionaste {campeon_pick} y baneaste {campeon_ban}")
+
 
 if __name__ == '__main__':
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
-    
-
-
+    app.run(debug=True)

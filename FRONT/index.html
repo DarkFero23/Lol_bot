@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/FRONT/style.css">
+    <title>Selección de Campeones</title>
+</head>
+<body>
+    <h1>Selección de Campeones</h1>
+    <form id="form">
+        <label for="campeon_pick">Campeón a seleccionar:</label>
+        <select id="campeon_pick" name="campeon_pick" required></select>
+
+        <label for="campeon_ban">Campeón a banear:</label>
+        <select id="campeon_ban" name="campeon_ban" required></select>
+
+        <button type="submit">Ejecutar Selección</button>
+    </form>
+
+    <div id="resultado"></div>
+
+    <script src="/FRONT/script.js"></script>
+</body>
+</html>
