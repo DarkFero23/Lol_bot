@@ -1,2 +1,2 @@
-web: gunicorn BACKEND.aceptar:app
+web: gunicorn BACKEND.main:app
 

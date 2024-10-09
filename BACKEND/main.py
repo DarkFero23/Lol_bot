@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+from aceptar import ejecutar_seleccion # Ajusta la importación según tu estructura de funciones
 
 app = Flask(__name__)
 CORS(app)  # Habilitar CORS para permitir solicitudes desde el frontend
