@@ -3,6 +3,7 @@ import time
 import os
 import cv2
 import numpy as np
+
 # Función que espera hasta que el botón 'Aceptar' aparezca en la pantalla y hace clic en él.
 def esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=0.85, tiempo_espera=500):
     tiempo_inicial = time.time()
