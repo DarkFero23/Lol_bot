@@ -31,3 +31,6 @@ if __name__ == "__main__":
     
     with mouse.Listener(on_click=on_click) as listener:
         listener.join()
+#Este script permite al usuario hacer clic en cuatro puntos de la pantalla para definir una región rectangular.
+# Luego calcula y muestra las coordenadas de la región definida. Aveces puede fallar, pero es útil para obtener coordenadas de una imagen.
+# Se recomienda usar el script @probar.py para detectar personajes, ya que es más confiable.

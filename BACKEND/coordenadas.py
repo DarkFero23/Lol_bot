@@ -32,3 +32,7 @@ if __name__ == "__main__":
     ruta_imagen = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot//Launcher/buscador.png'
     coordenadas = (50, 30)  # Coordenadas relativas dentro de la imagen
     click_en_coordenadas_imagen(ruta_imagen, coordenadas)
+
+# Este script permite hacer clic en coordenadas específicas dentro de una imagen que se encuentra en la pantalla.   
+# La función `click_en_coordenadas_imagen` busca la imagen en la pantalla y, si la encuentra, hace clic en las coordenadas especificadas.
+# Las coordenadas son relativas al centro de la imagen encontrada. 

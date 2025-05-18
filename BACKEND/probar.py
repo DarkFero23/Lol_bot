@@ -5,7 +5,7 @@ import time
 import os
 
 # Ruta de la imagen a detectar
-image_path = r'./Personajes_pick/kindred.png'
+image_path = r'./Personajes_pick/alistar.png'
 #image_path = r'./picks_blancoynegro/sylas11.png'
 
 # Umbral de coincidencia de template
@@ -75,3 +75,7 @@ for conf in confidence_levels:
     cv2.destroyAllWindows()
 
 print("Detección completa.")
+#Bendigo a GPT por darme este codigo tan clean , lo que hace es detectar y comparar la iamgene que esta en Personajes, igual se puede cambiar
+#Pero toda esta logica se encargar de comparar esa imagen con la que esta en el juego, y si la imagen es blanca o negra, lo detecta y lo marca
+# y si no lo es, lo marca de verde, y si no encuentra la imagen, lo marca de rojo , si no encuentra nada, imprime en consola el confidence obtenido y en base a eso
+# se puede cambiar el confidence en la parte de arriba, y si no encuentra nada, lo marca de rojo.

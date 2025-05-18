@@ -25,3 +25,6 @@ def buscar_y_mostrar_coordenadas():
 
 if __name__ == "__main__":
     buscar_y_mostrar_coordenadas()
+
+#Esta wea no sirve , todas las pruebas se hicieron con el archivo @probar.py@DarkFero23 ese es que realmente sirve
+# y el que se usa para detectar los personajes, este archivo solo sirve para mostrar coordenadas de la imagen (y eso, que aveces falla)

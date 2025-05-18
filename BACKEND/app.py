@@ -30,157 +30,290 @@ LABEL_FONT      = ("Roboto", 16)
 class LoLAutoPicker(ctk.CTk):
     def __init__(self):
         super().__init__()
-
-        # ——— Icono ———
+        
+        # ——— Icono ——— 
         icon_path = resource_path('lol_autopicker.ico')
         img = Image.open(icon_path)
         photo = ImageTk.PhotoImage(img)
         self.iconphoto(True, photo)
-        self._icon_ref = photo  # evita que el GC lo elimine
+        self._icon_ref = photo
 
-        # ——— Ventana principal ———
         self.title("LoL AutoPicker")
-        self.geometry("1000x800")   # ▲ Ventana más grande
+        self.geometry("1200x750")
         self.resizable(True, True)
 
         # ——— Estado interno ———
-        self.stage         = 'pick'   # 'pick', 'ban', 'salv', 'done'
-        self.pick          = None
-        self.ban           = None
-        self.salvaguarda   = None
-        self.thread        = None
-        self.stop_event    = None
+        self.stage = 'pick'
+        self.pick = None
+        self.ban = None
+        self.salvaguarda = None
+        self.thread = None
+        self.stop_event = None
+        self.pick_buttons = {}
+        self.ban_buttons = {}
+        self.salv_buttons = {}
+        
+        # ——— Estado visual ———
+        self.estado_actual = ctk.CTkLabel(self, text="Estado actual: PICK", font=("Roboto", 18, "bold"), text_color="skyblue")
+        self.estado_actual.pack(pady=(10, 10))
 
-        self.pick_buttons  = {}
-        self.ban_buttons   = {}
-        self.salv_buttons  = {}
+        self.indicadores_frame = ctk.CTkFrame(self, fg_color="#1E1F29")
+        self.indicadores_frame.pack(pady=10)
+        self.pick_info = ctk.CTkLabel(self.indicadores_frame, text="✅ Pick: ---", font=("Roboto", 14))
+        self.pick_info.grid(row=0, column=0, padx=20)
+        self.ban_info = ctk.CTkLabel(self.indicadores_frame, text="⛔ Ban: ---", font=("Roboto", 14))
+        self.ban_info.grid(row=0, column=1, padx=20)
+        self.salv_info = ctk.CTkLabel(self.indicadores_frame, text="🛟 Salvaguarda: ---", font=("Roboto", 14))
+        self.salv_info.grid(row=0, column=2, padx=20)
 
-        # ——— Labels de estado ———
-        self.pick_label = ctk.CTkLabel(self, text="Pick: Ninguno", font=LABEL_FONT)
-        self.pick_label.pack(pady=(20,5))
-        self.ban_label  = ctk.CTkLabel(self, text="Ban: Ninguno", font=LABEL_FONT)
-        self.ban_label.pack(pady=(0,5))
-        self.salv_label = ctk.CTkLabel(self, text="Salvaguarda: Ninguno", font=LABEL_FONT)
-        self.salv_label.pack(pady=(0,20))
-
-        # ——— Contenedor de frames ———
+        # ——— Contenedor y Scroll ———
         self.container = ctk.CTkFrame(self)
-        self.container.pack(padx=20, pady=5, fill="both", expand=True)
+        self.container.pack(padx=10, pady=10, fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
-        # ——— Frames scrollables ———
-        self.pick_frame = ctk.CTkScrollableFrame(self.container, width=760, height=400)
+        self.pick_frame = ctk.CTkScrollableFrame(self.container,  height=450, fg_color="#2A2B38")
         self.pick_frame.grid(row=0, column=0, sticky="nsew")
-        self.ban_frame  = ctk.CTkScrollableFrame(self.container, width=760, height=400)
-        self.ban_frame.grid(row=0, column=0, sticky="nsew")
-        self.salv_frame = ctk.CTkScrollableFrame(self.container, width=760, height=400)
-        self.salv_frame.grid(row=0, column=0, sticky="nsew")
+        self.container.grid_columnconfigure(0, weight=1)  
 
-        # Arranque: solo pick visible
+        self.ban_frame = ctk.CTkScrollableFrame(self.container,  height=450, fg_color="#2A2B38")
+        self.ban_frame.grid(row=0, column=0, sticky="nsew")
+        self.container.grid_columnconfigure(0, weight=1)  
+
+        self.salv_frame = ctk.CTkScrollableFrame(self.container,  height=450, fg_color="#2A2B38")
+        self.salv_frame.grid(row=0, column=0, sticky="nsew")
+        self.container.grid_columnconfigure(0, weight=1)  
+
+
         self.ban_frame.grid_remove()
         self.salv_frame.grid_remove()
 
+        # ——— Aviso de precaución ———
+        self.aviso_label = ctk.CTkLabel(
+            self,
+            text="⚠️ Es preferible tener todos los campeones.\nSi no se encuentra uno, puede fallar el pick o bugguearse.",
+            text_color="orange",
+            font=("Roboto", 13, "bold"),
+            justify="center",
+            wraplength=600
+        )
+        self.aviso_label.pack(pady=(5, 15))
         # ——— Botones de control ———
-        btn_frame = ctk.CTkFrame(self)
-        btn_frame.pack(pady=20)
-        self.confirm_pick_btn  = ctk.CTkButton(btn_frame, text="Confirmar Pick",
-                                               font=BUTTON_FONT,
-                                               command=self.confirm_pick,
-                                               state="disabled")
-        self.confirm_pick_btn.grid(row=0, column=0, padx=5)
+        self.btn_frame = ctk.CTkFrame(self, fg_color="#1E1F29")
+        self.btn_frame.pack(fill="x", pady=20, padx=20)  
+        
+        for i in range(6):
+            self.btn_frame.grid_columnconfigure(i, weight=1)  
 
-        self.back_btn  = ctk.CTkButton(btn_frame, text="Volver",
-                                       font=BUTTON_FONT,
-                                       command=self.back_to_pick,
-                                       state="disabled")
-        self.back_btn.grid(row=0, column=1, padx=5)
 
-        self.confirm_ban_btn = ctk.CTkButton(btn_frame, text="Confirmar Ban",
-                                             font=BUTTON_FONT,
-                                             command=self.confirm_ban,
-                                             state="disabled")
-        self.confirm_ban_btn.grid(row=0, column=2, padx=5)
+        style_btn = dict(
+        font=("Roboto", 14, "bold"),
+        corner_radius=10,
+        height=45,
+        fg_color="#000000",
+        text_color="white",
+        hover_color="#000000",
+)   
+        
+        
+        self.confirm_pick_btn = ctk.CTkButton(
+        self.btn_frame, text="✅ Confirmar Pick", command=self.confirm_pick, **style_btn
+        )
+        self.confirm_pick_btn.grid(row=0, column=0, padx=8, sticky="ew")
 
-        self.confirm_salv_btn = ctk.CTkButton(btn_frame, text="Confirmar Salvaguarda",
-                                              font=BUTTON_FONT,
-                                              command=self.confirm_salvaguarda,
-                                              state="disabled")
-        self.confirm_salv_btn.grid(row=0, column=3, padx=5)
+        self.back_btn = ctk.CTkButton(
+            self.btn_frame, text="🔙 Volver", command=self.back_to_pick, **style_btn
+        )
+        self.back_btn.grid(row=0, column=1, padx=8, sticky="ew")
 
-        self.start_btn = ctk.CTkButton(btn_frame, text="Iniciar Automatización",
-                                       font=BUTTON_FONT,
-                                       command=self.on_start,
-                                       state="disabled")
-        self.start_btn.grid(row=0, column=4, padx=5)
+        self.confirm_ban_btn = ctk.CTkButton(
+            self.btn_frame, text="🚫 Confirmar Ban", command=self.confirm_ban, **style_btn
+        )
+        self.confirm_ban_btn.grid(row=0, column=2, padx=8, sticky="ew")
 
-        self.reset_btn = ctk.CTkButton(btn_frame, text="Reiniciar",
-                                       font=BUTTON_FONT,
-                                       command=self.reset_all)
-        self.reset_btn.grid(row=0, column=5, padx=5)
+        self.confirm_salv_btn = ctk.CTkButton(
+            self.btn_frame, text="🛟 Confirmar Salvaguarda", command=self.confirm_salvaguarda, **style_btn
+        )
+        self.confirm_salv_btn.grid(row=0, column=3, padx=8, sticky="ew")
 
-        # ——— Cargo inicialmente los picks ———
-        self.load_champions(mode='pick')
+        self.start_btn = ctk.CTkButton(
+            self.btn_frame, text="🤖 Iniciar Automatización", command=self.on_start, **style_btn
+        )
+        self.start_btn.grid(row=0, column=4, padx=8, sticky="ew")
+
+        self.reset_btn = ctk.CTkButton(
+            self.btn_frame, text="♻️ Reiniciar", command=self.reset_all, **style_btn
+        )
+        self.reset_btn.grid(row=0, column=5, padx=8, sticky="ew")
+        # ——— Cargar campeones al iniciar ———
+        self.load_champions(mode='pick')  # 🔥 Esto es crucial
+        self.bind("<Configure>", self.on_resize)  # 🔁 Ajusta la grilla al cambiar tamaño
+        self.imagenes_precargadas = self.precargar_imagenes()
+
+
+    def precargar_imagenes(self):
+        imagenes = {}
+        for fn in sorted(os.listdir(CAMPEONES_DIR)):
+            if fn.lower().endswith('.png'):
+                champ = fn[:-4].lower()
+                ruta = os.path.join(CAMPEONES_DIR, fn)
+                try:
+                    img = Image.open(ruta)
+                    img.thumbnail((80, 80))
+                    imagenes[champ] = ImageTk.PhotoImage(img)
+                except Exception as e:
+                    print(f"Error cargando imagen {fn}: {e}")
+        return imagenes
+
+    def on_resize(self, event=None):
+        ancho_actual = self.container.winfo_width()
+        if ancho_actual < 200:
+            return
+
+        campeones_por_fila = max(4, ancho_actual // 130)
+
+        # 🔒 Solo si hay botones ya cargados
+        if self.stage in ("pick", "ban", "salv"):
+            botones_visibles = {
+                'pick': self.pick_buttons,
+                'ban': self.ban_buttons,
+                'salv': self.salv_buttons
+            }.get(self.stage, {})
+
+            if botones_visibles:
+                self.redibujar_campeones(campeones_por_fila)
+
+    def redibujar_campeones(self, columnas=6):
+        """Redibuja los campeones en el frame actual según la cantidad de columnas."""
+        modo = self.stage if self.stage in ('pick', 'ban', 'salv') else 'pick'
+        frame = {
+            'pick': self.pick_frame,
+            'ban': self.ban_frame,
+            'salv': self.salv_frame
+        }[modo]
+
+        botones = {
+            'pick': self.pick_buttons,
+            'ban': self.ban_buttons,
+            'salv': self.salv_buttons
+        }[modo]
+
+        for idx, (champ, btn) in enumerate(botones.items()):
+            fila, col = divmod(idx, columnas)
+            btn.grid(row=fila, column=col, padx=5, pady=5)
 
     def load_champions(self, mode='pick', exclude=None):
-        """
-        Carga thumbnails en pick_frame, ban_frame o salv_frame según mode.
-        exclude: lista de campeones a omitir.
-        """
         exclude = exclude or []
+
         if mode == 'pick':
-            frame, buttons = self.pick_frame, self.pick_buttons
+            frame = self.pick_frame
+            buttons = self.pick_buttons
         elif mode == 'ban':
-            frame, buttons = self.ban_frame, self.ban_buttons
+            frame = self.ban_frame
+            buttons = self.ban_buttons
         else:
-            frame, buttons = self.salv_frame, self.salv_buttons
+            frame = self.salv_frame
+            buttons = self.salv_buttons
+
         buttons.clear()
 
-        # Limpia el frame
         for w in frame.winfo_children():
             w.destroy()
 
+        frame.update_idletasks()
+        ancho_frame = frame.winfo_width()
+
+        # 🔁 Si aún no tiene tamaño real, vuelve a intentar luego
+        if ancho_frame <= 1:
+            self.after(50, lambda: self.load_champions(mode, exclude))
+            return
+
+        button_size = 100
+        spacing = 10
+        cols = max(1, ancho_frame // (button_size + spacing))
+
+        # 🔥 LIMPIA configuración previa
+        for col in range(50):  # asumimos máximo 50 columnas posibles
+            frame.grid_columnconfigure(col, weight=0)
+
         files = sorted(f for f in os.listdir(CAMPEONES_DIR) if f.lower().endswith('.png'))
-        cols, idx = 6, 0
+        idx = 0
+
         for fn in files:
             champ = fn[:-4].lower()
             if champ in exclude:
                 continue
-            img = Image.open(os.path.join(CAMPEONES_DIR, fn))
-            img.thumbnail(THUMBNAIL_SIZE)
-            photo = ImageTk.PhotoImage(img)
 
-            btn = ctk.CTkButton(frame, image=photo, text="",
-                                width=100, height=100, corner_radius=8,
-                                fg_color="#4A4A4A", hover_color="#6A6A6A",
-                                command=lambda c=champ, m=mode: self.on_champ_click(c, m))
-            btn.image = photo
+            img_ctk = self.imagenes_precargadas.get(champ)
+            if not img_ctk:
+                continue
+
+            champ_container = ctk.CTkFrame(frame, fg_color="transparent")  # 🔲 contenedor total
+
+            btn = ctk.CTkButton(
+                champ_container,
+                image=img_ctk,
+                text="",  # sin texto dentro del botón
+                width=80,
+                height=80,
+                corner_radius=10,
+                fg_color="#3A3B4B",
+                hover_color="#555",
+                command=lambda c=champ, m=mode: self.on_champ_click(c, m),
+            )
+            btn.image = img_ctk
+            btn.pack(padx=2, pady=(5, 2))
+
+            name_label = ctk.CTkLabel(
+                champ_container,
+                text=champ.capitalize(),
+                font=("Roboto", 11, "bold"),
+                text_color="white"
+            )
+            name_label.pack(pady=(0, 5))
+
             r, c = divmod(idx, cols)
-            btn.grid(row=r, column=c, padx=5, pady=5)
-            buttons[champ] = btn
+            champ_container.grid(row=r, column=c, padx=5, pady=5)
+            buttons[champ] = champ_container
             idx += 1
+
+        for col in range(cols):
+            frame.grid_columnconfigure(col, weight=1)
+
+
+        
+
+    def update_estado_ui(self, estado=None):
+        self.estado_actual.configure(text=f"Estado actual: {estado or self.stage.upper()}")
+        self.pick_info.configure(text=f"✅ Pick: {self.pick or '---'}")
+        self.ban_info.configure(text=f"⛔ Ban: {self.ban or '---'}")
+        self.salv_info.configure(text=f"🛟 Salvaguarda: {self.salvaguarda or '---'}")
 
     def on_champ_click(self, champ, mode):
         if mode == 'pick' and self.stage == 'pick':
             self.pick = champ
-            self.pick_label.configure(text=f"Pick: {champ}")
-            for b in self.pick_buttons.values(): b.configure(border_width=0)
+            self.pick_info.configure(text=f"✅ Pick: {champ}")
+            for b in self.pick_buttons.values():
+                b.configure(border_width=0)
             self.pick_buttons[champ].configure(border_width=2, border_color="green")
             self.confirm_pick_btn.configure(state="normal")
 
         elif mode == 'ban' and self.stage == 'ban':
             self.ban = champ
-            self.ban_label.configure(text=f"Ban: {champ}")
-            for b in self.ban_buttons.values(): b.configure(border_width=0)
+            self.ban_info.configure(text=f"⛔ Ban: {champ}")
+            for b in self.ban_buttons.values():
+                b.configure(border_width=0)
             self.ban_buttons[champ].configure(border_width=2, border_color="red")
             self.confirm_ban_btn.configure(state="normal")
 
         elif mode == 'salv' and self.stage == 'salv':
             self.salvaguarda = champ
-            self.salv_label.configure(text=f"Salvaguarda: {champ}")
-            for b in self.salv_buttons.values(): b.configure(border_width=0)
+            self.salv_info.configure(text=f"🛟 Salvaguarda: {champ}")
+            for b in self.salv_buttons.values():
+                b.configure(border_width=0)
             self.salv_buttons[champ].configure(border_width=2, border_color="yellow")
             self.confirm_salv_btn.configure(state="normal")
+
 
     def confirm_pick(self):
         """Pasa a ban y recarga excluyendo el pick."""
@@ -190,6 +323,7 @@ class LoLAutoPicker(ctk.CTk):
         self.load_champions(mode='ban', exclude=[self.pick])
         self.pick_frame.grid_remove()
         self.ban_frame.grid()
+        self.update_estado_ui()
 
     def back_to_pick(self):
         """Vuelve a pick, reset total."""
@@ -216,6 +350,7 @@ class LoLAutoPicker(ctk.CTk):
         self.load_champions(mode='salv', exclude=[self.pick, self.ban])
         self.ban_frame.grid_remove()
         self.salv_frame.grid()
+        self.update_estado_ui()
 
     def confirm_salvaguarda(self):
         """Finaliza selección de salvaguarda y habilita inicio."""
@@ -223,6 +358,7 @@ class LoLAutoPicker(ctk.CTk):
         self.confirm_salv_btn.configure(state="disabled")
         self.salv_frame.grid_remove()
         self.start_btn.configure(state="normal")
+        self.update_estado_ui()
 
     def reset_all(self):
         """Cancela el flujo y vuelve a estado inicial de pick."""
@@ -232,7 +368,7 @@ class LoLAutoPicker(ctk.CTk):
             if self.stop_event:
                 print("⛔ Señalando al hilo que se detenga...")
                 self.stop_event.set()
-                self.thread.join(timeout=5)  # Esperamos que termine
+                self.thread.join(timeout=5)  
 
         # 🔄 Reinicio de variables de estado
         self.stage = 'pick'
@@ -241,11 +377,13 @@ class LoLAutoPicker(ctk.CTk):
         self.salvaguarda = None
         self.stop_event = None
         self.thread = None
-
+        
         # 🔄 UI: limpiar labels
-        self.pick_label.configure(text="Pick: Ninguno")
-        self.ban_label.configure(text="Ban: Ninguno")
-        self.salv_label.configure(text="Salvaguarda: Ninguno")
+        self.estado_actual.configure(text="Estado actual: PICK")
+        self.pick_info.configure(text="✅ Pick: ---")
+        self.ban_info.configure(text="⛔ Ban: ---")
+        self.salv_info.configure(text="🛟 Salvaguarda: ---")
+        self.update_estado_ui()
 
         # 🔄 UI: desactivar botones
         self.confirm_pick_btn.configure(state="disabled")
@@ -268,6 +406,8 @@ class LoLAutoPicker(ctk.CTk):
         self.load_champions(mode='pick')
 
     def on_start(self):
+        self.estado_actual.configure(text="Estado actual: EN EJECUCIÓN")
+
         """Inicia la automatización en hilo."""
         if not (self.pick and self.ban):
             mbox.showwarning("Faltan datos", "Selecciona pick y ban antes.")
@@ -280,9 +420,8 @@ class LoLAutoPicker(ctk.CTk):
 
         # Nueva señal de control
         self.stop_event = threading.Event()
-        self.pick_label.configure(text="Esperando...")
-        self.ban_label.configure(text="Esperando...")
-        self.salv_label.configure(text="Esperando...")
+        self.estado_actual.configure(text="Estado actual: ESPERANDO")
+
         self.start_btn.configure(state="disabled")
 
         # Nuevo hilo
@@ -307,7 +446,7 @@ class LoLAutoPicker(ctk.CTk):
 
         if success:
             print("✅ Finalización automática exitosa. Reiniciando para próxima partida...")
-            self.reset_all()  # ← aquí se reinicia todo
+            self.reset_all()  
         else:
             mbox.showerror(title, msg or "La automatización fue cancelada o falló.")
             self.reset_all()

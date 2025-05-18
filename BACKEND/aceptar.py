@@ -6,7 +6,6 @@ import numpy as np
 import sys 
 import os
 from enum import Enum
-# Definición de los estados de la máquina de estados
 class State(Enum):
     BUSQUEDA   = 1
     WAIT_BAN   = 2
@@ -15,7 +14,6 @@ class State(Enum):
     PICK       = 5
     DONE       = 6
 
-# Función que espera hasta que el botón 'Aceptar' aparezca en la pantalla y hace clic en él.
 def esperar_y_aceptar_partida(ruta_boton_aceptar: str,
                               confianza: float = 0.85,
                               tiempo_espera: float = 500) -> dict:
@@ -50,26 +48,36 @@ def esperar_y_aceptar_partida(ruta_boton_aceptar: str,
 
         time.sleep(1)
 
-def esperar_imagen(ruta_objetivo, timeout=30, ruta_boton_aceptar=None, th_objetivo=0.85, th_boton=0.85):
+def esperar_imagen(ruta_objetivo, timeout=30, ruta_boton_aceptar=None, th_objetivo=0.85, th_boton=0.85, stop_event=None):
     print(f"🔎 Esperando imagen objetivo: {ruta_objetivo} (máx {timeout}s)")
     t0 = time.time()
     img_objetivo = cv2.imread(ruta_objetivo)
     tpl_boton = cv2.imread(ruta_boton_aceptar) if ruta_boton_aceptar else None
 
+    if img_objetivo is None:
+        print(f"❌ Error: imagen objetivo no cargada desde {ruta_objetivo}")
+        return False
+
     while time.time() - t0 < timeout:
+        if stop_event and stop_event.is_set():
+            print("🛑 Detención solicitada por stop_event durante espera de imagen.")
+            return False
+
         screen = pyautogui.screenshot()
         screen_bgr = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2BGR)
 
         if tpl_boton is not None:
             res_boton = cv2.matchTemplate(screen_bgr, tpl_boton, cv2.TM_CCOEFF_NORMED)
             max_val_boton = res_boton.max()
-            print(f"[DEBUG] Comparación {ruta_boton_aceptar}: max_val = {max_val_boton:.3f}")
+            print(f"[DEBUG] Comparación botón aceptar: max_val = {max_val_boton:.3f}")
             if max_val_boton >= th_boton:
                 print("🔁 Dodge detectado durante espera. Reiniciando flujo.")
                 return "DODGE"
 
         res = cv2.matchTemplate(screen_bgr, img_objetivo, cv2.TM_CCOEFF_NORMED)
-        if res.max() >= th_objetivo:
+        max_val_obj = res.max()
+        print(f"[DEBUG] Comparación {ruta_objetivo}: max_val = {max_val_obj:.3f}")
+        if max_val_obj >= th_objetivo:
             print(f"✅ Imagen encontrada: {ruta_objetivo}")
             return True
 
@@ -78,7 +86,7 @@ def esperar_imagen(ruta_objetivo, timeout=30, ruta_boton_aceptar=None, th_objeti
     print(f"❌ Timeout esperando: {ruta_objetivo}")
     return False
 
-# Función para limpiar el texto en el buscador.
+
 def limpiar_buscador(
     ruta_buscador: str,
     confianza: float = 0.90,
@@ -104,7 +112,6 @@ def limpiar_buscador(
         )
         res = cv2.matchTemplate(screenshot, tpl, cv2.TM_CCOEFF_NORMED)
 
-        # Decide umbral dinámico
         umbral = confianza if time.time() < mitad else min_conf
         loc = np.where(res >= umbral)
 
@@ -160,11 +167,11 @@ def pre_pick_campeon(campeon, ruta_buscador, ruta_campeon):
 
 def seleccionar_campeon_ban(campeon, ruta_buscador, ruta_campeon,
                             ruta_click_boton_ban, ruta_marker_ban,
-                            ruta_boton_aceptar,
+                            ruta_boton_aceptar, stop_event,
                             confianza=0.85, timeout=60):
     print(f"Esperando pantalla de baneo: {ruta_marker_ban}")
     res = esperar_imagen(ruta_marker_ban, timeout=timeout, ruta_boton_aceptar=ruta_boton_aceptar)
-    if res == "DODGE":
+    if res == "DODGE" or (stop_event and stop_event.is_set()):
         return "DODGE"
     elif not res:
         print(f"Error: No se detectó la pantalla de bloqueo ({ruta_marker_ban}) tras {timeout}s.")
@@ -176,9 +183,11 @@ def seleccionar_campeon_ban(campeon, ruta_buscador, ruta_campeon,
     h_bus, w_bus = tpl_bus.shape[:2]
     print(f"Buscando en el buscador al campeón: {campeon}")
     while True:
-        screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+        if stop_event and stop_event.is_set():
+            print("⛔ Interrumpido durante el ban (buscador).")
+            return False
 
-        # Dodge check constante
+        screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
         if existe_imagen(ruta_boton_aceptar, confianza):
             print("🔁 Dodge detectado en buscador. Reiniciando flujo.")
             return "DODGE"
@@ -196,9 +205,11 @@ def seleccionar_campeon_ban(campeon, ruta_buscador, ruta_campeon,
     h_cam, w_cam = tpl_cam.shape[:2]
     inicio = time.time()
     while time.time() - inicio < timeout:
-        screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+        if stop_event and stop_event.is_set():
+            print("⛔ Interrumpido durante el ban (campeón).")
+            return False
 
-        # Dodge check constante
+        screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
         if existe_imagen(ruta_boton_aceptar, confianza):
             print("🔁 Dodge detectado en imagen campeón. Reiniciando flujo.")
             return "DODGE"
@@ -221,47 +232,60 @@ def seleccionar_campeon_ban(campeon, ruta_buscador, ruta_campeon,
     return False
 
 
-TH_BUS      = 0.85   # umbral alto
-TH_BUS_MIN  = 0.60   # umbral bajo si no lo encuentra con el alto
-TIMEOUT_BUS = 5      # segundos totales para limpiar 
-def seleccionar_campeon_pick(campeon, ruta_buscador, ruta_campeon, ruta_boton, ruta_boton_aceptar, ruta_label_bloqueo):
-    print(f"Buscando en el buscador al campeón: {campeon}")
+TH_BUS      = 0.85  
+TH_BUS_MIN  = 0.60   
+TIMEOUT_BUS = 5     
+def seleccionar_campeon_pick(campeon, ruta_buscador, ruta_campeon, ruta_boton,
+                              ruta_boton_aceptar, ruta_label_bloqueo, stop_event=None):
+    print(f"🔎 Buscando en el buscador al campeón: {campeon}")
 
-    # 1) Limpia el buscador y escribe
     tpl_bus = cv2.imread(ruta_buscador)
+    tpl_cam = cv2.imread(ruta_campeon)
+    tpl_bloq = cv2.imread(ruta_label_bloqueo)
+    if tpl_bus is None or tpl_cam is None or tpl_bloq is None:
+        print("❌ Faltan plantillas de buscador, campeón o bloqueo.")
+        return False
+
+    h_cam, w_cam = tpl_cam.shape[:2]
+
     limpiar_buscador(ruta_buscador)
     time.sleep(0.2)
 
-    screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+    
+    for _ in range(10):
+        if stop_event and stop_event.is_set():
+            print("⛔ Cancelado por stop_event (buscador).")
+            return False
 
-    # Dodge antes de buscar
-    if existe_imagen(ruta_boton_aceptar, 0.85):
-        print("🔁 Dodge detectado antes de pick. Reiniciando flujo.")
-        return "DODGE"
-
-    res = cv2.matchTemplate(screen, tpl_bus, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(res >= 0.85)
-    if not loc[0].size:
-        print("❌ No encontré el buscador.")
-        return False
-
-    yb, xb = loc[0][0], loc[1][0]
-    pyautogui.click(xb + tpl_bus.shape[1]//2, yb + tpl_bus.shape[0]//2)
-    pyautogui.write(campeon, interval=0.07)
-    time.sleep(1)
-
-    tpl_cam = cv2.imread(ruta_campeon)
-    tpl_bloq = cv2.imread(ruta_label_bloqueo)
-    if tpl_cam is None or tpl_bloq is None:
-        print("❌ Faltan plantillas de campeón o de bloqueado.")
-        return False
-    h_cam, w_cam = tpl_cam.shape[:2]
-
-    start = time.time()
-    while time.time() - start < 60:
         screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
 
-        # Dodge check constante
+        if existe_imagen(ruta_boton_aceptar, 0.85):
+            print("🔁 Dodge detectado antes de escribir. Reiniciando flujo.")
+            return "DODGE"
+
+        res = cv2.matchTemplate(screen, tpl_bus, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(res >= 0.85)
+        if loc[0].size:
+            y, x = loc[0][0], loc[1][0]
+            pyautogui.click(x + tpl_bus.shape[1] // 2, y + tpl_bus.shape[0] // 2)
+            pyautogui.write(campeon, interval=0.07)
+            break
+        time.sleep(0.5)
+    else:
+        print("❌ No encontré el buscador tras varios intentos.")
+        return False
+
+    time.sleep(0.8)  
+
+    start = time.time()
+    MAX_PICK_TIMEOUT = 6  
+    while time.time() - start < MAX_PICK_TIMEOUT:
+        if stop_event and stop_event.is_set():
+            print("⛔ Cancelado por stop_event (pick).")
+            return False
+
+        screen = cv2.cvtColor(np.array(pyautogui.screenshot()), cv2.COLOR_RGB2BGR)
+
         if existe_imagen(ruta_boton_aceptar, 0.85):
             print("🔁 Dodge detectado en pick. Reiniciando flujo.")
             return "DODGE"
@@ -273,7 +297,7 @@ def seleccionar_campeon_pick(campeon, ruta_buscador, ruta_campeon, ruta_boton, r
             continue
 
         for y0, x0 in zip(loc[0], loc[1]):
-            cx, cy = x0 + w_cam//2, y0 + h_cam//2
+            cx, cy = x0 + w_cam // 2, y0 + h_cam // 2
             pyautogui.moveTo(cx, cy)
             time.sleep(0.5)
 
@@ -284,22 +308,21 @@ def seleccionar_campeon_pick(campeon, ruta_buscador, ruta_campeon, ruta_boton, r
                 return False
 
             pyautogui.click(cx, cy)
-            print(f"{campeon} seleccionado.")
+            print(f"✅ {campeon} seleccionado.")
             limpiar_buscador(ruta_buscador)
             time.sleep(0.2)
 
             if hacer_click_boton(ruta_boton):
-                print("Clic en el botón exitoso.")
+                print("✅ Clic en el botón de pick ejecutado.")
                 return True
             else:
-                print("Error: No se pudo hacer clic en el botón.")
+                print("❌ Error al hacer clic en el botón de pick.")
                 return False
 
         time.sleep(0.5)
 
-    print(f"Error: No se encontró la imagen del campeón {campeon} en pantalla.")
+    print(f"❌ No se encontró el campeón {campeon} en pantalla tras {MAX_PICK_TIMEOUT}s.")
     return False
-            
 
 def hacer_click_boton(ruta_boton):
     """
@@ -323,7 +346,6 @@ def hacer_click_boton(ruta_boton):
                 print("Botón clickeado.")
                 return True
 
-        # Puedes poner un delay aquí si lo deseas
         time.sleep(1)
 
     print("Error: No se encontró el botón.")
@@ -355,7 +377,6 @@ def existe_imagen(ruta: str, confianza: float) -> bool:
     print(f"[DEBUG] Comparación {ruta}: max_val = {max_val:.3f}")
     return max_val >= confianza
 
-# ——— Helpers para resolución de rutas ———
 def resource_path(rel_path: str) -> str:
     """
     Devuelve la ruta absoluta para datos en dev o dentro del .exe de PyInstaller.
@@ -363,7 +384,7 @@ def resource_path(rel_path: str) -> str:
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, rel_path)
 
-def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop_event=None) -> bool:
+def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop_event=None):
     ruta_buscador        = resource_path('Launcher/buscador1.0.png')
     ruta_fijar_boton     = resource_path('Launcher/fijar.png')
     ruta_click_boton_ban = resource_path('Launcher/bloqueo2.png')
@@ -377,7 +398,7 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
 
     for p in (ruta_campeon_pick, ruta_campeon_ban, ruta_marker_pick):
         if not os.path.exists(p):
-            print(f"Error: archivo no encontrado: {p}")
+            print(f"❌ Archivo no encontrado: {p}")
             return False
 
     state = State.BUSQUEDA
@@ -386,16 +407,19 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
 
     while True:
         if stop_event and stop_event.is_set():
-            print("⚠️ Flujo cancelado por stop_event.")
+            print("⛔ Cancelado por stop_event.")
             return False
 
         curr = existe_imagen(ruta_boton_aceptar, TH)
+
         if curr and not accept_last:
             print("🔁 Botón 'Aceptar' detectado de nuevo, reiniciando flujo desde BUSQUEDA…")
-            esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=TH, tiempo_espera=5)
+            esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=TH, tiempo_espera=1)
+            time.sleep(0.5)
             state = State.WAIT_BAN
             accept_last = True
             continue
+
         accept_last = curr
 
         if state == State.BUSQUEDA:
@@ -403,10 +427,15 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
             continue
 
         elif state == State.WAIT_BAN:
-            res = esperar_imagen(ruta_marker_ban, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar)
+            print(f"⏳ Esperando fase de ban ({ruta_marker_ban})…")
+            res = esperar_imagen(ruta_marker_ban, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
+
+            if stop_event and stop_event.is_set():
+                print("⛔ Cancelado por stop_event en WAIT_BAN.")
+                return False
             if res == "DODGE":
+                print("🔁 Dodge detectado en espera ban.")
                 state = State.BUSQUEDA
-                accept_last = False
                 continue
             elif not res:
                 print("❌ No llegó fase de ban.")
@@ -415,23 +444,35 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
             state = State.BAN
 
         elif state == State.BAN:
-            if not seleccionar_campeon_ban(
+            res = seleccionar_campeon_ban(
                 campeon_ban,
                 ruta_buscador,
                 ruta_campeon_ban,
                 ruta_click_boton_ban,
                 ruta_marker_ban,
-                ruta_boton_aceptar
-            ):
-                print("❌ Error en seleccionar_campeon_ban.")
+                ruta_boton_aceptar,
+                confianza=TH,
+                timeout=60,
+                stop_event=stop_event
+            )
+            if res == "DODGE":
+                print("🔁 Dodge detectado en BAN.")
+                state = State.BUSQUEDA
+                continue
+            elif not res:
                 return False
             state = State.WAIT_PICK
 
         elif state == State.WAIT_PICK:
-            res = esperar_imagen(ruta_marker_pick, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar)
+            print(f"⏳ Esperando pantalla de pick ({ruta_marker_pick})…")
+            res = esperar_imagen(ruta_marker_pick, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
+
+            if stop_event and stop_event.is_set():
+                print("⛔ Cancelado por stop_event en WAIT_PICK.")
+                return False
             if res == "DODGE":
+                print("🔁 Dodge detectado en espera pick.")
                 state = State.BUSQUEDA
-                accept_last = False
                 continue
             elif not res:
                 print("❌ No apareció pantalla de pick.")
@@ -440,45 +481,57 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
             state = State.PICK
 
         elif state == State.PICK:
-            print("🎯 PICK final…")
-            ok = seleccionar_campeon_pick(
+            print("🎯 Realizando pick final…")
+            res = seleccionar_campeon_pick(
                 campeon_pick,
                 ruta_buscador,
                 ruta_campeon_pick,
                 ruta_fijar_boton,
                 ruta_boton_aceptar,
-                ruta_label_bloqueo
-                
+                ruta_label_bloqueo,
+                stop_event=stop_event
             )
-            if not ok and campeon_salvaguarda:
+            if res == "DODGE":
+                print("🔁 Dodge detectado durante pick final.")
+                state = State.BUSQUEDA
+                continue
+
+            if not res and campeon_salvaguarda:
                 print(f"⚠️ Usando salvaguarda: {campeon_salvaguarda}")
                 limpiar_buscador(ruta_buscador)
-                time.sleep(0.2)
                 ruta_campeon_pick = resource_path(f'Personajes_pick/{campeon_salvaguarda}.png')
-                ok = seleccionar_campeon_pick(
+                res = seleccionar_campeon_pick(
                     campeon_salvaguarda,
                     ruta_buscador,
                     ruta_campeon_pick,
                     ruta_fijar_boton,
                     ruta_boton_aceptar,
-                    ruta_label_bloqueo
-                    
+                    ruta_label_bloqueo,
+                    stop_event=stop_event
                 )
-                if ok:
+                if res == "DODGE":
+                    print("🔁 Dodge detectado durante pick con salvaguarda.")
+                    state = State.BUSQUEDA
+                    continue
+                if res:
                     campeon_pick = campeon_salvaguarda
-
-            if not ok:
-                print("❌ Falló pick y salvaguarda.")
+                    print(f"✅ Salvaguarda {campeon_salvaguarda} pickeada con éxito.")
+                else:
+                    print(f"❌ Falló también el pick de salvaguarda.")
+                    return False
+            elif not res:
+                print(f"❌ No se pudo pickear {campeon_pick} y no hay salvaguarda definida.")
                 return False
 
-            # POST-PICK VERIFICACIÓN
             print("⏳ Esperando post-pick por posibles dodges (hasta 150s)...")
             for _ in range(150):
+                if stop_event and stop_event.is_set():
+                    print("⛔ Cancelado por stop_event durante espera post-pick.")
+                    return False
                 if existe_imagen(ruta_boton_aceptar, TH):
                     print("🔁 Dodge detectado post-pick. Reiniciando flujo.")
                     esperar_y_aceptar_partida(ruta_boton_aceptar, confianza=TH, tiempo_espera=5)
                     state = State.WAIT_BAN
-                    accept_last = True
                     break
                 time.sleep(1)
             else:
@@ -487,3 +540,7 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
 
         time.sleep(0.1)
 
+#Este scriot permite automatizar el proceso de selección de campeones en League of Legends.
+# Se basa en la detección de imágenes para interactuar con la interfaz del juego.
+# El flujo de trabajo incluye la espera de la pantalla de baneo, la selección del campeón a banear,
+# la espera de la pantalla de selección de campeones y finalmente la selección del campeón deseado.
