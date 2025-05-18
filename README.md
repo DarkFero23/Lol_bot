@@ -9,7 +9,9 @@ Nació como un proyecto personal a raíz del pedido de un mononeuronal llamado 9
 Lo que empezó como una solución a su torpeza para seleccionar campeones terminó evolucionando en una herramienta útil para cualquier jugador de LoL que quiera automatizar su selección de campeones.
 
 ✨ PRINCIPALES FUNCIONALIDADES
+
 ───────────────────────────────
+
 ✅ Automatización completa del flujo de selección:
   - Detecta automáticamente el botón “Aceptar” al inicio de la partida y responde al instante.  
   - Realiza BAN y PICK automáticamente con el campeón indicado desde la GUI.  
@@ -34,6 +36,7 @@ Lo que empezó como una solución a su torpeza para seleccionar campeones termin
    - Respeta hilos activos y asegura que todo se reinicie sin dejar procesos colgados.
 
 💡 DISEÑO DE LA INTERFAZ
+
 ────────────────────────
 - UI moderna en modo oscuro (CustomTkinter).
 - Botones grandes e intuitivos para confirmar Pick, Ban y Salvaguarda.
@@ -42,7 +45,9 @@ Lo que empezó como una solución a su torpeza para seleccionar campeones termin
 - Estado actual siempre visible ("BUSQUEDA", "BAN", "PICK", etc.).
 
 📦 ESTRUCTURA DEL SISTEMA
+
 ──────────────────────────
+
 📁 /Personajes_pick/
 → Carpeta donde debes colocar las imágenes PNG de los campeones.
 → Importante: usa imágenes oficiales claras y con buena resolución.
@@ -56,7 +61,9 @@ Lo que empezó como una solución a su torpeza para seleccionar campeones termin
    - bloqueado.png
 
 📜 FUNCIONAMIENTO DETALLADO
+
 ────────────────────────────
+
 1. **Búsqueda**: Se detecta automáticamente cuando el cliente está buscando partida.
 2. **Aceptar**: Cuando aparece el botón "Aceptar", se hace clic automáticamente.
 3. **BAN**: Una vez en la fase de baneo, se busca al campeón y se banea con precisión.
@@ -66,7 +73,9 @@ Lo que empezó como una solución a su torpeza para seleccionar campeones termin
 6. **Post-pick**: El sistema espera por posibles dodgeos (hasta 150s), y reinicia si ocurre.
 
 🚨 IMPORTANTE
+
 ──────────────
+
 - Es fundamental que tengas **todos los campeones en la carpeta Personajes_pick**, ya que si uno no se encuentra o no se visualiza bien, podría fallar el flujo.
 - El sistema depende de que el cliente no sea modificado visualmente (temas o resoluciones muy distintas pueden afectar).
 - Se recomienda usar imágenes claras, sin bordes ni transparencia, para garantizar detección óptima.
@@ -74,7 +83,9 @@ Lo que empezó como una solución a su torpeza para seleccionar campeones termin
 - Por eso esta diseñado para gente que no se encuentre en su PC en todo el proceso, desde "Aceptar partida", hasta que inicie.
  
 🔧 REQUISITOS (por si quieres clonarlo y mejorarlo)
+
 ──────────────
+
 - Python 3.10 o superior
 - Bibliotecas necesarias:
    - `opencv-python`
