@@ -2,8 +2,11 @@ LoL AutoPicker - Automatizador para Selección de Campeones 🎮
 
 📌 DESCRIPCIÓN GENERAL
 ───────────────────────
-LoL AutoPicker es una herramienta automatizada desarrollada en Python con CustomTkinter para ayudarte a seleccionar, banear y asegurar campeones automáticamente en el cliente de League of Legends (LoL). Está pensada especialmente para jugadores que, por distintos motivos (estar lejos del teclado, conversando con su mamá o papá, preparando algo en casa, etc.), no pueden estar frente a su PC durante la fase de “Aceptar partida” o en la selección de campeones. 
-Nació como un proyecto personal a raíz del pedido de un mononeuronal llamado 92 (a quien, lamentablemente, tengo que llamar amigo). Lo que empezó como una solución a su torpeza para seleccionar campeones terminó evolucionando en una herramienta útil para cualquier jugador de LoL que quiera automatizar su selección de campeones.
+LoL AutoPicker es una herramienta automatizada desarrollada en Python con CustomTkinter para ayudarte a seleccionar, banear y asegurar campeones automáticamente en el cliente de League of Legends (LoL). 
+Está pensada especialmente para jugadores que, por distintos motivos (estar lejos del teclado, conversando con su mamá o papá, preparando algo en casa, etc.), 
+no pueden estar frente a su PC durante la fase de “Aceptar partida” o en la selección de campeones. 
+Nació como un proyecto personal a raíz del pedido de un mononeuronal llamado 92 (a quien, lamentablemente, tengo que llamar amigo). 
+Lo que empezó como una solución a su torpeza para seleccionar campeones terminó evolucionando en una herramienta útil para cualquier jugador de LoL que quiera automatizar su selección de campeones.
 
 ✨ PRINCIPALES FUNCIONALIDADES
 ───────────────────────────────
