@@ -5,7 +5,7 @@ import time
 import os
 
 # Ruta de la imagen a detectar
-image_path = r'./Launcher/buscador1.0.png'
+image_path = r'./Personajes_pick/kindred.png'
 #image_path = r'./picks_blancoynegro/sylas11.png'
 
 # Umbral de coincidencia de template

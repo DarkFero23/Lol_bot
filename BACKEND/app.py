@@ -226,56 +226,69 @@ class LoLAutoPicker(ctk.CTk):
 
     def reset_all(self):
         """Cancela el flujo y vuelve a estado inicial de pick."""
-        if self.thread and self.thread.is_alive() and self.stop_event:
-            self.stop_event.set()
 
+        # 🛑 Señal de parada al hilo si está activo
+        if self.thread and self.thread.is_alive():
+            if self.stop_event:
+                print("⛔ Señalando al hilo que se detenga...")
+                self.stop_event.set()
+                self.thread.join(timeout=5)  # Esperamos que termine
+
+        # 🔄 Reinicio de variables de estado
         self.stage = 'pick'
         self.pick = None
         self.ban = None
         self.salvaguarda = None
+        self.stop_event = None
+        self.thread = None
 
+        # 🔄 UI: limpiar labels
         self.pick_label.configure(text="Pick: Ninguno")
         self.ban_label.configure(text="Ban: Ninguno")
         self.salv_label.configure(text="Salvaguarda: Ninguno")
 
+        # 🔄 UI: desactivar botones
         self.confirm_pick_btn.configure(state="disabled")
         self.confirm_ban_btn.configure(state="disabled")
         self.confirm_salv_btn.configure(state="disabled")
         self.start_btn.configure(state="disabled")
         self.back_btn.configure(state="disabled")
 
+        # 🔄 UI: mostrar solo el frame de pick
         self.salv_frame.grid_remove()
         self.ban_frame.grid_remove()
         self.pick_frame.grid()
 
+        # 🔄 UI: limpiar bordes
         for d in (self.pick_buttons, self.ban_buttons, self.salv_buttons):
             for b in d.values():
                 b.configure(border_width=0)
 
+        # 🔄 Volver a cargar imágenes
         self.load_champions(mode='pick')
 
     def on_start(self):
-        """Inicia la automatización en un hilo."""
+        """Inicia la automatización en hilo."""
         if not (self.pick and self.ban):
             mbox.showwarning("Faltan datos", "Selecciona pick y ban antes.")
             return
 
+        # Detiene hilo anterior si había
         if self.thread and self.thread.is_alive() and self.stop_event:
             self.stop_event.set()
+            self.thread.join(timeout=5)
 
+        # Nueva señal de control
         self.stop_event = threading.Event()
-        self.pick_label.configure(text="Procesando...")
-        self.ban_label.configure(text="Procesando...")
-        self.salv_label.configure(text="Procesando...")
-        # ▲ Indicamos que estamos a la espera de que aparezca "Aceptar"
         self.pick_label.configure(text="Esperando...")
         self.ban_label.configure(text="Esperando...")
         self.salv_label.configure(text="Esperando...")
         self.start_btn.configure(state="disabled")
 
+        # Nuevo hilo
         self.thread = threading.Thread(target=self.run_selection, daemon=True)
         self.thread.start()
-
+        
     def run_selection(self):
         success = ejecutar_seleccion(
             self.pick,
@@ -287,16 +300,17 @@ class LoLAutoPicker(ctk.CTk):
 
     def on_finish_selection(self, success):
         title = "Éxito" if success else "Cancelado/Error"
-        msg = f"Pick: {self.pick}\nBan: {self.ban}"
-        if self.salvaguarda:
-            msg += f"\nSalvaguarda: {self.salvaguarda}"
+        msg = (
+            f"Pick: {self.pick}\nBan: {self.ban}\n"
+            + (f"Salvaguarda: {self.salvaguarda}" if self.salvaguarda else "")
+        )
 
         if success:
-            mbox.showinfo(title, msg)
+            print("✅ Finalización automática exitosa. Reiniciando para próxima partida...")
+            self.reset_all()  # ← aquí se reinicia todo
         else:
-            mbox.showerror(title, msg or "La automatización falló o fue cancelada.")
-
-        self.reset_all()
+            mbox.showerror(title, msg or "La automatización fue cancelada o falló.")
+            self.reset_all()
 
 if __name__ == "__main__":
     app = LoLAutoPicker()
