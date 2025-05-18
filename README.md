@@ -7,6 +7,8 @@ Está pensada especialmente para jugadores que, por distintos motivos (estar lej
 no pueden estar frente a su PC durante la fase de “Aceptar partida” o en la selección de campeones. 
 Nació como un proyecto personal a raíz del pedido de un mononeuronal llamado 92 (a quien, lamentablemente, tengo que llamar amigo). 
 Lo que empezó como una solución a su torpeza para seleccionar campeones terminó evolucionando en una herramienta útil para cualquier jugador de LoL que quiera automatizar su selección de campeones.
+DENTRO DE LA CARPTEA DIST SE ENCUENTRA EL .EXE
+
 
 ✨ PRINCIPALES FUNCIONALIDADES
 
