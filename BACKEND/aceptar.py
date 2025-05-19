@@ -428,7 +428,7 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
 
         elif state == State.WAIT_BAN:
             print(f"⏳ Esperando fase de ban ({ruta_marker_ban})…")
-            res = esperar_imagen(ruta_marker_ban, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
+            res = esperar_imagen(ruta_marker_ban, timeout=600, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
 
             if stop_event and stop_event.is_set():
                 print("⛔ Cancelado por stop_event en WAIT_BAN.")
@@ -465,7 +465,7 @@ def ejecutar_seleccion(campeon_pick, campeon_ban, campeon_salvaguarda=None, stop
 
         elif state == State.WAIT_PICK:
             print(f"⏳ Esperando pantalla de pick ({ruta_marker_pick})…")
-            res = esperar_imagen(ruta_marker_pick, timeout=60, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
+            res = esperar_imagen(ruta_marker_pick, timeout=600, ruta_boton_aceptar=ruta_boton_aceptar, stop_event=stop_event)
 
             if stop_event and stop_event.is_set():
                 print("⛔ Cancelado por stop_event en WAIT_PICK.")
