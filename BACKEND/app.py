@@ -30,7 +30,14 @@ class LoLAutoPicker(ctk.CTk):
         self.title("LoL AutoPicker")
         self.geometry("1920x1080")
         
-        icon = Image.open(ICON_PATH)
+        if os.path.exists(ICON_PATH):
+            try:
+                icon = Image.open(ICON_PATH)
+                self.iconphoto(True, ImageTk.PhotoImage(icon))
+            except Exception as e:
+                print("⚠️ No se pudo cargar el icono:", e)
+        else:
+            print("⚠️ Icono no encontrado:", ICON_PATH)
         self.iconphoto(True, ImageTk.PhotoImage(icon))
 
         # Estado interno

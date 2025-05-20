@@ -351,6 +351,7 @@
    'C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_threading_local.py',
    'PYMODULE'),
   ('aceptar', 'D:\\Lol_BACK\\Lol_bot\\BACKEND\\aceptar.py', 'PYMODULE'),
+  ('amarillo', 'D:\\Lol_BACK\\Lol_bot\\BACKEND\\amarillo.py', 'PYMODULE'),
   ('argparse',
    'C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\argparse.py',
    'PYMODULE'),

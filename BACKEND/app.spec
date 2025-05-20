@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('Launcher', 'Launcher'), ('Personajes_pick', 'Personajes_pick')],
+    datas=[('lol_autopicker.ico', '.'), ('Launcher', 'Launcher'), ('Lineas', 'Lineas'), ('Personajes_pick', 'Personajes_pick')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
