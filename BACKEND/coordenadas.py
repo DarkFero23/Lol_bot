@@ -1,38 +1,30 @@
 import pyautogui
 import time
 
-# Función para hacer clic en coordenadas específicas dentro de una imagen.
-def click_en_coordenadas_imagen(ruta_imagen, coordenadas):
+def click_en_coordenadas_imagen(ruta_imagen, coordenadas=(0, 0), confianza=0.8):
     """
-    Busca una imagen en la pantalla y hace clic en las coordenadas específicas dentro de ella.
+    Busca una imagen en la pantalla y hace clic en coordenadas relativas al centro.
+    Reintenta continuamente hasta encontrarla.
     
     :param ruta_imagen: Ruta del archivo de la imagen que se va a buscar.
-    :param coordenadas: Coordenadas (x, y) dentro de la imagen donde hacer clic.
+    :param coordenadas: Coordenadas (x, y) relativas al centro de la imagen donde hacer clic.
+    :param confianza: Nivel de confianza para la detección de imagen (0.0 a 1.0).
     """
-    # Buscar la imagen en la pantalla
-    time.sleep(2)
-
-    imagen = pyautogui.locateOnScreen(ruta_imagen, confidence=0.7)
-    if imagen is not None:
-        # Obtener el centro de la imagen
-        x, y = pyautogui.center(imagen)
-        
-        # Ajustar las coordenadas relativas al centro de la imagen
-        x_relativo = x + coordenadas[0]
-        y_relativo = y + coordenadas[1]
-        
-        # Hacer clic en las coordenadas específicas
-        pyautogui.click(x_relativo, y_relativo)
-        print(f"Clic en las coordenadas {x_relativo}, {y_relativo}.")
-    else:
-        print("Imagen no encontrada en la pantalla.")
+    print(f"🔍 Buscando imagen: {ruta_imagen}")
+    while True:
+        imagen = pyautogui.locateOnScreen(ruta_imagen, confidence=confianza)
+        if imagen is not None:
+            centro_x, centro_y = pyautogui.center(imagen)
+            click_x = centro_x + coordenadas[0]
+            click_y = centro_y + coordenadas[1]
+            pyautogui.moveTo(click_x, click_y)
+            print(f"✅ Imagen encontrada. Clic en ({click_x}, {click_y}) relativo al centro.")
+            break
+        else:
+            print("❌ Imagen no encontrada. Reintentando en 0.5s...")
+            time.sleep(0.5)
 
 # Ejemplo de uso
 if __name__ == "__main__":
-    ruta_imagen = 'C:/Users/Luis/Downloads/Lol_bot/Lol_bot//Launcher/buscador.png'
-    coordenadas = (50, 30)  # Coordenadas relativas dentro de la imagen
-    click_en_coordenadas_imagen(ruta_imagen, coordenadas)
-
-# Este script permite hacer clic en coordenadas específicas dentro de una imagen que se encuentra en la pantalla.   
-# La función `click_en_coordenadas_imagen` busca la imagen en la pantalla y, si la encuentra, hace clic en las coordenadas especificadas.
-# Las coordenadas son relativas al centro de la imagen encontrada. 
+    ruta_imagen = r'./Personajes_pick/shaco.png'
+    click_en_coordenadas_imagen(ruta_imagen)  # Clic exactamente en el centro

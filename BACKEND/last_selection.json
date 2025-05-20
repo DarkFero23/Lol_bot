@@ -1,0 +1,17 @@
+{
+  "picks": {
+    "TOP": "fiddlesticks",
+    "MID": "caitlyn",
+    "JG": "cassiopeia",
+    "ADC": "cho'gath",
+    "SUPP": "gangplank"
+  },
+  "salvaguardas": {
+    "TOP": "kog'maw",
+    "MID": "kled",
+    "JG": "mel",
+    "ADC": "kog'maw",
+    "SUPP": "kog'maw"
+  },
+  "ban": "ivern"
+}
