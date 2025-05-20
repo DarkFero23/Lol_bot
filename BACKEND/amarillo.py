@@ -3,7 +3,8 @@ import time
 import cv2
 import numpy as np
 import pyautogui
-
+import sys
+import os
 # Parámetros
 TH = 0.85
 TIMEOUT_SEC = 5  # segundos máximo para detectar línea
@@ -14,9 +15,18 @@ offset_y = 2   # píxeles abajo de la franja
 ROI_W = 59     # ancho del área de interés
 ROI_H = 75     # alto del área de interés
 
+
+def resource_path(relative_path):
+    try:
+        # PyInstaller crea una carpeta temporal y almacena ahí los archivos
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 # Rutas relativas
-LINEAS_DIR = 'Lineas'
-STRIPE_PATH = 'Launcher/amarillo.png'
+LINEAS_DIR = resource_path('Lineas')
+STRIPE_PATH = resource_path('Launcher/amarillo.png')
 
 
 def encontrar_coordenadas(template_path: str, image: np.ndarray, threshold: float):

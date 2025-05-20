@@ -19,7 +19,7 @@ ctk.set_default_color_theme("blue")
 CAMPEONES_DIR = resource_path("Personajes_pick")
 ICON_PATH    = resource_path("lol_autopicker.ico")
 # Directorio del script principal
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(__file__))
 CACHE_FILE = os.path.join(SCRIPT_DIR, 'last_selection.json')
 
 class LoLAutoPicker(ctk.CTk):
@@ -29,6 +29,7 @@ class LoLAutoPicker(ctk.CTk):
         # Ventana
         self.title("LoL AutoPicker")
         self.geometry("1920x1080")
+        
         icon = Image.open(ICON_PATH)
         self.iconphoto(True, ImageTk.PhotoImage(icon))
 
@@ -69,7 +70,7 @@ class LoLAutoPicker(ctk.CTk):
         search_entry.grid(row=0, column=1, padx=5, sticky="w")
         warning_lbl = ctk.CTkLabel(
             search_frame,
-            text="⚠️ Es preferible tener todos los campeones\nen Personajes, de lo contrario puede fallar",
+            text="⚠️ Es preferible tener todos los campeones\nen Personajes, de lo contrario puede fallar\nTambien tener en cuenta que el programa guarda tus picks anteriores.",
             text_color="orange",
             font=("Roboto", 12),
             wraplength=400,
