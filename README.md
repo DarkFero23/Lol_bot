@@ -7,6 +7,8 @@ LoL AutoPicker es una herramienta automatizada desarrollada en Python usando `Cu
 
 Fue creada por necesidad, aunque en realidad fue una emergencia mental provocada por un mononeuronal llamado Enzo Valentino LLapa Arce , mejor conocido en el mundo del hampa como el *92* —un ser al que lamentablemente tengo que llamar amigo. Un pedido suyo se transformó en un proyecto con muchas horas de desarrollo, bugs corregidos a mano y [gpt], testeo en tiempo real y capturas repetidas a las 3am para encontrar la maldita posición exacta del botón de "ACEPTAR".
 
+El .exe esta dentro de "Backend" , "dist". Listo para descargar y usar, aunque se que fallara.
+
 ---
 
 ## ✨ FUNCIONALIDADES PRINCIPALES
@@ -139,4 +141,4 @@ Gracias 92. No por tu ayuda, sino porque sin vos no habría creado una app tan i
 Puedes compartirlo, clonarlo, mejorarlo... solo no le preguntes a 92 cómo se usa. No queremos otro bug ni que pida mil cosas y para anteayer.
 
 ---
-## "Adelante Mantengase Firmes" ##
+## "Adelante Mantengase Firmes"
