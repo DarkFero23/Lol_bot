@@ -1,17 +1,17 @@
 {
   "picks": {
     "TOP": "fiddlesticks",
-    "MID": "caitlyn",
+    "MID": "sylas",
     "JG": "cassiopeia",
     "ADC": "cho'gath",
     "SUPP": "gangplank"
   },
   "salvaguardas": {
     "TOP": "kog'maw",
-    "MID": "kled",
+    "MID": "viego",
     "JG": "mel",
     "ADC": "kog'maw",
     "SUPP": "kog'maw"
   },
-  "ban": "ivern"
+  "ban": "leblanc"
 }

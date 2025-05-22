@@ -5,7 +5,7 @@ import time
 import os
 
 # === Configuración ===
-carpeta_imagenes = './Launcher'
+carpeta_imagenes = './Lineas'
 salida_log = 'resultados_deteccion.txt'
 confidence = 0.90
 saturation_threshold = 50

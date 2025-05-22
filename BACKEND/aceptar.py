@@ -288,7 +288,7 @@ def esperar_imagen(ruta_objetivo, timeout=30, ruta_boton_aceptar=None, th_objeti
         print(f"❌ Error: imagen objetivo no cargada desde {ruta_objetivo}")
         return False
 
-    sleep_delay = 0.8  # 🔄 reduce la frecuencia de screenshots
+    sleep_delay = 2.8  # 🔄 reduce la frecuencia de screenshots
     while time.time() - t0 < timeout:
         if stop_event and stop_event.is_set():
             print("🛑 Detención solicitada por stop_event durante espera de imagen.")
